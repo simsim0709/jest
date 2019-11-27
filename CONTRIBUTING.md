@@ -42,6 +42,12 @@ _Before_ submitting a pull request, please make sure the following is done…
     python --version
     ```
 
+1.  Make sure you have a compatible version of `node` installed (As of October 25th 2019, `v12.x` is recommended).
+
+    ```sh
+    node -v
+    ```
+
 1.  Run `yarn install`. On Windows: To install [Yarn](https://yarnpkg.com/en/docs/install#windows-tab) on Windows you may need to download either node.js or Chocolatey<br />
 
     ```sh
@@ -54,6 +60,12 @@ _Before_ submitting a pull request, please make sure the following is done…
     yarn --version
     ```
 
+    On Windows `yarn install` may fail with `gyp ERR! build error`. One of possible solutions:
+
+    ```sh
+     yarn global add windows-build-tools
+    ```
+
 1.  If you've added code that should be tested, add tests. You can use watch mode that continuously transforms changed files to make your life easier.
 
     ```sh
@@ -63,7 +75,7 @@ _Before_ submitting a pull request, please make sure the following is done…
 
 1.  If you've changed APIs, update the documentation.
 
-1.  Ensure the test suite passes via `yarn test`. To run the test suite you may need to install [Mercurial](https://www.mercurial-scm.org/) (`hg`). On macOS, this can be done using [homebrew](http://brew.sh/): `brew install hg`.
+1.  Ensure the test suite passes via `yarn jest`. To run the test suite you may need to install [Mercurial](https://www.mercurial-scm.org/) (`hg`). On macOS, this can be done using [homebrew](http://brew.sh/): `brew install hg`.
 
     ```sh-session
     $ brew install hg # maybe
@@ -71,6 +83,14 @@ _Before_ submitting a pull request, please make sure the following is done…
     ```
 
 1.  If you haven't already, complete the CLA.
+
+#### Changelog entries
+
+All changes that add a feature to or fix a bug in any of Jest's packages require a changelog entry containing the names of the packages affected, a description of the change, and the number of and link to the pull request. Try to match the structure of the existing entries.
+
+For significant changes to the documentation or website and things like cleanup, refactoring, and dependency updates, the "Chore & Maintenance" section of the changelog can be used.
+
+You can add or edit the changelog entry in the GitHub web interface once you have opened the pull request and know the number and link to it.
 
 #### Testing
 
@@ -99,6 +119,14 @@ Time:        0.232s, estimated 1s
 Ran all test suites.
 ```
 
+##### Using jest-circus
+
+There may be cases where you want to run jest using `jest-circus` instead of `jest-jasmine2` (which is the default runner) for integration testing. In situations like this, set the environment variable `JEST_CIRCUS` to 1. That will configure jest to use `jest-circus`. So something like this.
+
+```bash
+JEST_CIRCUS=1 yarn jest
+```
+
 #### Additional Workflow for any changes made to website or docs
 
 If you are making changes to the website or documentation, test the website folder and run the server to check if your changes are being displayed accurately.
@@ -110,6 +138,8 @@ If you are making changes to the website or documentation, test the website fold
     $ yarn start
     ```
 1.  You can run a development server to check if the changes you made are being displayed accurately by running `yarn start` in the website directory.
+
+The Jest website also offers documentation for older versions of Jest, which you can edit in `website/versioned_docs`. After making changes to the current documentation in `docs`, please check if any older versions of the documentation have a copy of the file where the change is also relevant and apply the changes to the `versioned_docs` as well.
 
 ### Contributor License Agreement (CLA)
 
@@ -183,7 +213,7 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 - 80 character line length strongly preferred.
 - Prefer `'` over `"`.
 - ES6 syntax when possible.
-- Use [Flow types](http://flowtype.org/).
+- Use [TypeScript](https://www.typescriptlang.org/).
 - Use semicolons;
 - Trailing commas,
 - Avd abbr wrds.

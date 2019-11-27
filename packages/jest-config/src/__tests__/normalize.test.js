@@ -24,8 +24,10 @@ let expectedPathFooQux;
 let expectedPathAbs;
 let expectedPathAbsAnother;
 
+let virtualModuleRegexes;
+beforeEach(() => (virtualModuleRegexes = [/jest-jasmine2/, /babel-jest/]));
 const findNodeModule = jest.fn(name => {
-  if (name.match(/jest-jasmine2|babel-jest/)) {
+  if (virtualModuleRegexes.some(regex => regex.test(name))) {
     return name;
   }
   return null;
@@ -326,9 +328,27 @@ describe('transform', () => {
     );
 
     expect(options.transform).toEqual([
-      [DEFAULT_CSS_PATTERN, '/root/node_modules/jest-regex-util'],
-      [DEFAULT_JS_PATTERN, require.resolve('babel-jest')],
-      ['abs-path', '/qux/quux'],
+      [DEFAULT_CSS_PATTERN, '/root/node_modules/jest-regex-util', {}],
+      [DEFAULT_JS_PATTERN, require.resolve('babel-jest'), {}],
+      ['abs-path', '/qux/quux', {}],
+    ]);
+  });
+  it("pulls in config if it's passed as an array, and defaults to empty object", () => {
+    const {options} = normalize(
+      {
+        rootDir: '/root/',
+        transform: {
+          [DEFAULT_CSS_PATTERN]: '<rootDir>/node_modules/jest-regex-util',
+          [DEFAULT_JS_PATTERN]: ['babel-jest', {rootMode: 'upward'}],
+          'abs-path': '/qux/quux',
+        },
+      },
+      {},
+    );
+    expect(options.transform).toEqual([
+      [DEFAULT_CSS_PATTERN, '/root/node_modules/jest-regex-util', {}],
+      [DEFAULT_JS_PATTERN, require.resolve('babel-jest'), {rootMode: 'upward'}],
+      ['abs-path', '/qux/quux', {}],
     ]);
   });
 });
@@ -802,7 +822,7 @@ describe('Upgrade help', () => {
       {},
     );
 
-    expect(options.transform).toEqual([['.*', '/node_modules/bar/baz']]);
+    expect(options.transform).toEqual([['.*', '/node_modules/bar/baz', {}]]);
     expect(options.transformIgnorePatterns).toEqual([
       joinForPattern('bar', 'baz'),
       joinForPattern('qux', 'quux'),
@@ -934,6 +954,10 @@ describe('preset', () => {
         return '/node_modules/react-native/jest-preset.json';
       }
 
+      if (name === 'react-native-js-preset/jest-preset') {
+        return '/node_modules/react-native-js-preset/jest-preset.js';
+      }
+
       if (name === 'doesnt-exist') {
         return null;
       }
@@ -948,6 +972,15 @@ describe('preset', () => {
         setupFiles: ['b'],
         setupFilesAfterEnv: ['b'],
         transform: {b: 'b'},
+      }),
+      {virtual: true},
+    );
+    jest.doMock(
+      '/node_modules/react-native-js-preset/jest-preset.js',
+      () => ({
+        moduleNameMapper: {
+          json: true,
+        },
       }),
       {virtual: true},
     );
@@ -1008,6 +1041,29 @@ describe('preset', () => {
     }).toThrowErrorMatchingSnapshot();
   });
 
+  test('throws when a dependency is missing in the preset', () => {
+    jest.doMock(
+      '/node_modules/react-native-js-preset/jest-preset.js',
+      () => {
+        require('library-that-is-not-installed');
+        return {
+          transform: {},
+        };
+      },
+      {virtual: true},
+    );
+
+    expect(() => {
+      normalize(
+        {
+          preset: 'react-native-js-preset',
+          rootDir: '/root/path/foo',
+        },
+        {},
+      );
+    }).toThrowError(/Cannot find module 'library-that-is-not-installed'/);
+  });
+
   test('throws when preset is invalid', () => {
     jest.doMock('/node_modules/react-native/jest-preset.json', () =>
       jest.requireActual('./jest-preset.json'),
@@ -1021,7 +1077,29 @@ describe('preset', () => {
         },
         {},
       );
-    }).toThrowError(/Unexpected token }/);
+    }).toThrowError(/Unexpected token } in JSON at position 104[\s\S]* at /);
+  });
+
+  test('throws when preset evaluation throws type error', () => {
+    jest.doMock(
+      '/node_modules/react-native-js-preset/jest-preset.js',
+      () => ({
+        transform: {}.nonExistingProp.call(),
+      }),
+      {virtual: true},
+    );
+
+    expect(() => {
+      normalize(
+        {
+          preset: 'react-native-js-preset',
+          rootDir: '/root/path/foo',
+        },
+        {},
+      );
+    }).toThrowError(
+      /TypeError: Cannot read property 'call' of undefined[\s\S]* at /,
+    );
   });
 
   test('works with "react-native"', () => {
@@ -1064,15 +1142,18 @@ describe('preset', () => {
       {},
     );
 
-    expect(options.moduleNameMapper).toEqual([['a', 'a'], ['b', 'b']]);
+    expect(options.moduleNameMapper).toEqual([
+      ['a', 'a'],
+      ['b', 'b'],
+    ]);
     expect(options.modulePathIgnorePatterns).toEqual(['b', 'a']);
     expect(options.setupFiles.sort()).toEqual([
       '/node_modules/a',
       '/node_modules/b',
     ]);
     expect(options.transform).toEqual([
-      ['a', '/node_modules/a'],
-      ['b', '/node_modules/b'],
+      ['a', '/node_modules/a', {}],
+      ['b', '/node_modules/b', {}],
     ]);
   });
 
@@ -1110,7 +1191,7 @@ describe('preset', () => {
       c: 'cc',
       a: 'aa',
     };
-    /* eslint-disable sort-keys */
+    /* eslint-enable */
     const {options} = normalize(
       {
         preset: 'react-native',
@@ -1121,10 +1202,10 @@ describe('preset', () => {
     );
 
     expect(options.transform).toEqual([
-      ['e', '/node_modules/ee'],
-      ['b', '/node_modules/bb'],
-      ['c', '/node_modules/cc'],
-      ['a', '/node_modules/aa'],
+      ['e', '/node_modules/ee', {}],
+      ['b', '/node_modules/bb', {}],
+      ['c', '/node_modules/cc', {}],
+      ['a', '/node_modules/aa', {}],
     ]);
   });
 
@@ -1138,6 +1219,62 @@ describe('preset', () => {
     );
 
     expect(options.setupFilesAfterEnv).toEqual(['/node_modules/b']);
+  });
+});
+
+describe('preset with globals', () => {
+  beforeEach(() => {
+    const Resolver = require('jest-resolve');
+    Resolver.findNodeModule = jest.fn(name => {
+      if (name === 'global-foo/jest-preset') {
+        return '/node_modules/global-foo/jest-preset.json';
+      }
+
+      return '/node_modules/' + name;
+    });
+    jest.doMock(
+      '/node_modules/global-foo/jest-preset.json',
+      () => ({
+        globals: {
+          config: {
+            hereToStay: 'This should stay here',
+          },
+        },
+      }),
+      {virtual: true},
+    );
+  });
+
+  afterEach(() => {
+    jest.dontMock('/node_modules/global-foo/jest-preset.json');
+  });
+
+  test('should merge the globals preset correctly', () => {
+    const {options} = normalize(
+      {
+        globals: {
+          config: {
+            sideBySide: 'This should also live another day',
+          },
+          textValue: 'This is just text',
+        },
+        preset: 'global-foo',
+        rootDir: '/root/path/foo',
+      },
+      {},
+    );
+
+    expect(options).toEqual(
+      expect.objectContaining({
+        globals: {
+          config: {
+            hereToStay: 'This should stay here',
+            sideBySide: 'This should also live another day',
+          },
+          textValue: 'This is just text',
+        },
+      }),
+    );
   });
 });
 
@@ -1453,8 +1590,8 @@ describe('moduleFileExtensions', () => {
       expect(() =>
         normalize(
           {
-            rootDir: '/root/',
             moduleFileExtensions: ['json', 'jsx'],
+            rootDir: '/root/',
             runner,
           },
           {},
@@ -1467,8 +1604,8 @@ describe('moduleFileExtensions', () => {
     expect(() =>
       normalize(
         {
-          rootDir: '/root/',
           moduleFileExtensions: ['json', 'jsx'],
+          rootDir: '/root/',
           runner: './', // does not need to be a valid runner for this validation
         },
         {},
@@ -1477,10 +1614,91 @@ describe('moduleFileExtensions', () => {
   });
 });
 
+describe('cwd', () => {
+  it('is set to process.cwd', () => {
+    const {options} = normalize({rootDir: '/root/'}, {});
+    expect(options.cwd).toBe(process.cwd());
+  });
+
+  it('is not lost if the config has its own cwd property', () => {
+    console.warn.mockImplementation(() => {});
+    const {options} = normalize(
+      {
+        cwd: '/tmp/config-sets-cwd-itself',
+        rootDir: '/root/',
+      },
+      {},
+    );
+    expect(options.cwd).toBe(process.cwd());
+    expect(console.warn).toHaveBeenCalled();
+  });
+});
+
 describe('Defaults', () => {
   it('should be accepted by normalize', () => {
     normalize({...Defaults, rootDir: '/root'}, {});
 
     expect(console.warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('displayName', () => {
+  test.each`
+    displayName             | description
+    ${{}}                   | ${'is an empty object'}
+    ${{name: 'hello'}}      | ${'missing color'}
+    ${{color: 'green'}}     | ${'missing name'}
+    ${{color: 2, name: []}} | ${'using invalid values'}
+  `(
+    'should throw an error when displayName is $description',
+    ({displayName}) => {
+      expect(() => {
+        normalize(
+          {
+            displayName,
+            rootDir: '/root/',
+          },
+          {},
+        );
+      }).toThrowErrorMatchingSnapshot();
+    },
+  );
+
+  it.each([
+    undefined,
+    'jest-runner',
+    'jest-runner-eslint',
+    'jest-runner-tslint',
+    'jest-runner-tsc',
+  ])('generates a default color for the runner %s', runner => {
+    virtualModuleRegexes.push(/jest-runner-.+/);
+    const {
+      options: {displayName},
+    } = normalize(
+      {
+        displayName: 'project',
+        rootDir: '/root/',
+        runner,
+      },
+      {},
+    );
+    expect(displayName.name).toBe('project');
+    expect(displayName.color).toMatchSnapshot();
+  });
+});
+
+describe('testTimeout', () => {
+  it('should return timeout value if defined', () => {
+    console.warn.mockImplementation(() => {});
+    const {options} = normalize({rootDir: '/root/', testTimeout: 1000}, {});
+
+    expect(options.testTimeout).toBe(1000);
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it('should throw an error if timeout is a negative number', () => {
+    expect(() =>
+      normalize({rootDir: '/root/', testTimeout: -1}, {}),
+    ).toThrowErrorMatchingSnapshot();
   });
 });

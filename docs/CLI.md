@@ -148,9 +148,9 @@ Forces test results output highlighting even if stdout is not a TTY.
 
 Alias: `-c`. The path to a Jest config file specifying how to find and execute tests. If no `rootDir` is set in the config, the directory containing the config file is assumed to be the rootDir for the project. This can also be a JSON-encoded value which Jest will use as configuration.
 
-### `--coverage`
+### `--coverage[=<boolean>]`
 
-Indicates that test coverage information should be collected and reported in the output. This option is also aliased by `--collectCoverage`.
+Alias: `--collectCoverage`. Indicates that test coverage information should be collected and reported in the output. Optionally pass `<boolean>` to override option set in configuration.
 
 ### `--debug`
 
@@ -158,7 +158,7 @@ Print debugging info about your Jest config.
 
 ### `--detectOpenHandles`
 
-Attempt to collect and print open handles preventing Jest from exiting cleanly. Use this in cases where you need to use `--forceExit` in order for Jest to exit to potentially track down the reason. Implemented using [`async_hooks`](https://nodejs.org/api/async_hooks.html), so it only works in Node 8 and newer.
+Attempt to collect and print open handles preventing Jest from exiting cleanly. Use this in cases where you need to use `--forceExit` in order for Jest to exit to potentially track down the reason. This implies `--runInBand`, making tests run serially. Implemented using [`async_hooks`](https://nodejs.org/api/async_hooks.html), so it only works in Node 8 and newer. This option has a significant performance penalty and should only be used for debugging.
 
 ### `--env=<environment>`
 
@@ -194,7 +194,7 @@ Prints the test results in JSON. This mode will send all other test output and u
 
 ### `--outputFile=<filename>`
 
-Write test results to a file when the `--json` option is also specified.
+Write test results to a file when the `--json` option is also specified. The returned JSON structure is documented in [testResultsProcessor](Configuration.md#testResultsProcessor-string).
 
 ### `--lastCommit`
 
@@ -214,7 +214,7 @@ Prevents Jest from executing more than the specified amount of tests at the same
 
 ### `--maxWorkers=<num>|<string>`
 
-Alias: `-w`. Specifies the maximum number of workers the worker-pool will spawn for running tests. This defaults to the number of the cores available on your machine. It may be useful to adjust this in resource limited environments like CIs but the default should be adequate for most use-cases.
+Alias: `-w`. Specifies the maximum number of workers the worker-pool will spawn for running tests. In single run mode, this defaults to the number of the cores available on your machine minus one for the main thread. In watch mode, this defaults to half of the available cores on your machine to ensure Jest is unobtrusive and does not grind your machine to a halt. It may be useful to adjust this in resource limited environments like CIs but the defaults should be adequate for most use-cases.
 
 For environments with variable CPUs available, you can use percentage based configuration: `--maxWorkers=50%`
 
@@ -296,6 +296,14 @@ An array of regexp pattern strings that is tested against all tests paths before
 ### `--testRunner=<path>`
 
 Lets you specify a custom test runner.
+
+### `--testSequencer=<path>`
+
+Lets you specify a custom test sequencer. Please refer to the documentation of the corresponding configuration property for details.
+
+### `--testTimeout=<number>`
+
+Default timeout of a test in milliseconds. Default value: 5000.
 
 ### `--updateSnapshot`
 

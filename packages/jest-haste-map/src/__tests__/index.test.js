@@ -6,10 +6,8 @@
  *
  */
 
-'use strict';
-
-import {skipSuiteOnWindows} from '../../../../scripts/ConditionalTest';
-const crypto = require('crypto');
+import crypto from 'crypto';
+import {skipSuiteOnWindows} from '@jest/test-utils';
 
 function mockHashContents(contents) {
   return crypto
@@ -42,6 +40,7 @@ jest.mock('../crawlers/watchman', () =>
 
     const {data, ignore, rootDir, roots, computeSha1} = options;
     const list = mockChangedFiles || mockFs;
+    const removedFiles = new Map();
 
     data.clocks = mockClocks;
 
@@ -53,12 +52,19 @@ jest.mock('../crawlers/watchman', () =>
 
           data.files.set(relativeFilePath, ['', 32, 42, 0, [], hash]);
         } else {
-          data.files.delete(relativeFilePath);
+          const fileData = data.files.get(relativeFilePath);
+          if (fileData) {
+            removedFiles.set(relativeFilePath, fileData);
+            data.files.delete(relativeFilePath);
+          }
         }
       }
     }
 
-    return Promise.resolve(data);
+    return Promise.resolve({
+      hasteMap: data,
+      removedFiles,
+    });
   }),
 );
 
@@ -75,7 +81,7 @@ jest.mock('sane', () => ({
   WatchmanWatcher: mockWatcherConstructor,
 }));
 
-jest.mock('../lib/WatchmanWatcher.js', () => mockWatcherConstructor);
+jest.mock('../lib/WatchmanWatcher', () => mockWatcherConstructor);
 
 let mockChangedFiles;
 let mockFs;
@@ -130,6 +136,7 @@ const useBuitinsInContext = value => {
 };
 
 let consoleWarn;
+let consoleError;
 let defaultConfig;
 let fs;
 let H;
@@ -182,7 +189,10 @@ describe('HasteMap', () => {
     fs = require('graceful-fs');
 
     consoleWarn = console.warn;
+    consoleError = console.error;
+
     console.warn = jest.fn();
+    console.error = jest.fn();
 
     HasteMap = require('../');
     H = HasteMap.H;
@@ -205,6 +215,7 @@ describe('HasteMap', () => {
 
   afterEach(() => {
     console.warn = consoleWarn;
+    console.error = consoleError;
   });
 
   it('exports constants', () => {
@@ -329,17 +340,17 @@ describe('HasteMap', () => {
 
       expect(data.files).toEqual(
         createMap({
-          'fruits/Banana.js': ['Banana', 32, 42, 1, ['Strawberry'], null],
-          'fruits/Pear.js': ['Pear', 32, 42, 1, ['Banana', 'Strawberry'], null],
-          'fruits/Strawberry.js': ['Strawberry', 32, 42, 1, [], null],
-          'fruits/__mocks__/Pear.js': ['', 32, 42, 1, ['Melon'], null],
+          'fruits/Banana.js': ['Banana', 32, 42, 1, 'Strawberry', null],
+          'fruits/Pear.js': ['Pear', 32, 42, 1, 'Banana\0Strawberry', null],
+          'fruits/Strawberry.js': ['Strawberry', 32, 42, 1, '', null],
+          'fruits/__mocks__/Pear.js': ['', 32, 42, 1, 'Melon', null],
           // node modules
           'fruits/node_modules/fbjs/lib/flatMap.js': [
             'flatMap',
             32,
             42,
             1,
-            [],
+            '',
             null,
           ],
           'fruits/node_modules/react/React.js': [
@@ -347,10 +358,10 @@ describe('HasteMap', () => {
             32,
             42,
             1,
-            ['Component'],
+            'Component',
             null,
           ],
-          'vegetables/Melon.js': ['Melon', 32, 42, 1, [], null],
+          'vegetables/Melon.js': ['Melon', 32, 42, 1, '', null],
         }),
       );
 
@@ -399,26 +410,23 @@ describe('HasteMap', () => {
 
           // The node crawler returns "null" for the SHA-1.
           data.files = createMap({
-            'fruits/Banana.js': ['Banana', 32, 42, 0, ['Strawberry'], null],
-            'fruits/Pear.js': [
-              'Pear',
-              32,
-              42,
-              0,
-              ['Banana', 'Strawberry'],
-              null,
-            ],
-            'fruits/Strawberry.js': ['Strawberry', 32, 42, 0, [], null],
-            'fruits/__mocks__/Pear.js': ['', 32, 42, 0, ['Melon'], null],
-            'vegetables/Melon.js': ['Melon', 32, 42, 0, [], null],
+            'fruits/Banana.js': ['Banana', 32, 42, 0, 'Strawberry', null],
+            'fruits/Pear.js': ['Pear', 32, 42, 0, 'Banana\0Strawberry', null],
+            'fruits/Strawberry.js': ['Strawberry', 32, 42, 0, '', null],
+            'fruits/__mocks__/Pear.js': ['', 32, 42, 0, 'Melon', null],
+            'vegetables/Melon.js': ['Melon', 32, 42, 0, '', null],
           });
 
-          return Promise.resolve(data);
+          return Promise.resolve({
+            hasteMap: data,
+            removedFiles: new Map(),
+          });
         });
 
         const hasteMap = new HasteMap({
           ...defaultConfig,
           computeSha1: true,
+          mapper: file => [file],
           maxWorkers: 1,
           useWatchman,
         });
@@ -432,7 +440,7 @@ describe('HasteMap', () => {
               32,
               42,
               1,
-              ['Strawberry'],
+              'Strawberry',
               '7772b628e422e8cf59c526be4bb9f44c0898e3d1',
             ],
             'fruits/Pear.js': [
@@ -440,7 +448,7 @@ describe('HasteMap', () => {
               32,
               42,
               1,
-              ['Banana', 'Strawberry'],
+              'Banana\0Strawberry',
               '89d0c2cc11dcc5e1df50b8af04ab1b597acfba2f',
             ],
             'fruits/Strawberry.js': [
@@ -448,7 +456,7 @@ describe('HasteMap', () => {
               32,
               42,
               1,
-              [],
+              '',
               'e8aa38e232b3795f062f1d777731d9240c0f8c25',
             ],
             'fruits/__mocks__/Pear.js': [
@@ -456,7 +464,7 @@ describe('HasteMap', () => {
               32,
               42,
               1,
-              ['Melon'],
+              'Melon',
               '8d40afbb6e2dc78e1ba383b6d02cafad35cceef2',
             ],
             'vegetables/Melon.js': [
@@ -464,7 +472,7 @@ describe('HasteMap', () => {
               32,
               42,
               1,
-              [],
+              '',
               'f16ccf6f2334ceff2ddb47628a2c5f2d748198ca',
             ],
           }),
@@ -524,6 +532,8 @@ describe('HasteMap', () => {
   });
 
   it('warns on duplicate mock files', () => {
+    expect.assertions(1);
+
     // Duplicate mock files for blueberry
     mockFs['/project/fruits1/__mocks__/subdir/Blueberry.js'] = `
       // Blueberry
@@ -532,10 +542,14 @@ describe('HasteMap', () => {
       // Blueberry too!
     `;
 
-    return new HasteMap({mocksPattern: '__mocks__', ...defaultConfig})
+    return new HasteMap({
+      mocksPattern: '__mocks__',
+      throwOnModuleCollision: true,
+      ...defaultConfig,
+    })
       .build()
-      .then(({__hasteMapForTest: data}) => {
-        expect(console.warn.mock.calls[0][0]).toMatchSnapshot();
+      .catch(() => {
+        expect(console.error.mock.calls[0][0]).toMatchSnapshot();
       });
   });
 
@@ -606,7 +620,7 @@ describe('HasteMap', () => {
               32,
               42,
               1,
-              ['Blackberry'],
+              'Blackberry',
               null,
             ],
             'fruits/Strawberry.ios.js': [
@@ -614,10 +628,10 @@ describe('HasteMap', () => {
               32,
               42,
               1,
-              ['Raspberry'],
+              'Raspberry',
               null,
             ],
-            'fruits/Strawberry.js': ['Strawberry', 32, 42, 1, ['Banana'], null],
+            'fruits/Strawberry.js': ['Strawberry', 32, 42, 1, 'Banana', null],
           }),
         );
 
@@ -704,14 +718,7 @@ describe('HasteMap', () => {
             expect(useBuitinsInContext(data.clocks)).toEqual(mockClocks);
 
             const files = new Map(initialData.files);
-            files.set('fruits/Banana.js', [
-              'Banana',
-              32,
-              42,
-              1,
-              ['Kiwi'],
-              null,
-            ]);
+            files.set('fruits/Banana.js', ['Banana', 32, 42, 1, 'Kiwi', null]);
 
             expect(useBuitinsInContext(data.files)).toEqual(files);
 
@@ -970,7 +977,7 @@ describe('HasteMap', () => {
       mockImpl(options).then(() => {
         const {data} = options;
         data.files.set('fruits/invalid/file.js', ['', 34, 44, 0, []]);
-        return data;
+        return {hasteMap: data, removedFiles: new Map()};
       }),
     );
     return new HasteMap(defaultConfig)
@@ -1066,9 +1073,12 @@ describe('HasteMap', () => {
     node.mockImplementation(options => {
       const {data} = options;
       data.files = createMap({
-        'fruits/Banana.js': ['', 32, 42, 0, [], null],
+        'fruits/Banana.js': ['', 32, 42, 0, '', null],
       });
-      return Promise.resolve(data);
+      return Promise.resolve({
+        hasteMap: data,
+        removedFiles: new Map(),
+      });
     });
 
     return new HasteMap(defaultConfig)
@@ -1079,7 +1089,7 @@ describe('HasteMap', () => {
 
         expect(data.files).toEqual(
           createMap({
-            'fruits/Banana.js': ['Banana', 32, 42, 1, ['Strawberry'], null],
+            'fruits/Banana.js': ['Banana', 32, 42, 1, 'Strawberry', null],
           }),
         );
 
@@ -1097,9 +1107,12 @@ describe('HasteMap', () => {
     node.mockImplementation(options => {
       const {data} = options;
       data.files = createMap({
-        'fruits/Banana.js': ['', 32, 42, 0, [], null],
+        'fruits/Banana.js': ['', 32, 42, 0, '', null],
       });
-      return Promise.resolve(data);
+      return Promise.resolve({
+        hasteMap: data,
+        removedFiles: new Map(),
+      });
     });
 
     return new HasteMap(defaultConfig)
@@ -1110,7 +1123,7 @@ describe('HasteMap', () => {
 
         expect(data.files).toEqual(
           createMap({
-            'fruits/Banana.js': ['Banana', 32, 42, 1, ['Strawberry'], null],
+            'fruits/Banana.js': ['Banana', 32, 42, 1, 'Strawberry', null],
           }),
         );
       });

@@ -5,7 +5,7 @@ title: Testing React Native Apps
 
 At Facebook, we use Jest to test [React Native](http://facebook.github.io/react-native/) applications.
 
-Get a deeper insight into testing a working React Native app example by reading the following series: [Part 1: Jest – Snapshot come into play](https://blog.callstack.io/unit-testing-react-native-with-the-new-jest-i-snapshots-come-into-play-68ba19b1b9fe#.12zbnbgwc) and [Part 2: Jest – Redux Snapshots for your Actions and Reducers](https://blog.callstack.io/unit-testing-react-native-with-the-new-jest-ii-redux-snapshots-for-your-actions-and-reducers-8559f6f8050b).
+Get a deeper insight into testing a working React Native app example by reading the following series: [Part 1: Jest – Snapshot come into play](https://callstack.com/blog/testing-react-native-with-the-new-jest-part-1-snapshots-come-into-play/) and [Part 2: Jest – Redux Snapshots for your Actions and Reducers](https://callstack.com/blog/testing-react-native-with-the-new-jest-part-2-redux-snapshots-for-your-actions-and-reducers/).
 
 ## Setup
 
@@ -23,7 +23,7 @@ Starting from react-native version 0.38, a Jest setup is included by default whe
 
 _Note: If you are upgrading your react-native application and previously used the `jest-react-native` preset, remove the dependency from your `package.json` file and change the preset to `react-native` instead._
 
-Simply run `yarn test` to run tests with Jest.
+Run `yarn test` to run tests with Jest.
 
 ## Snapshot Test
 

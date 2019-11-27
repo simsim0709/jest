@@ -145,7 +145,18 @@ jest.mock('./sound-player', () => {
 });
 ```
 
-A limitation with the factory parameter is that, since calls to `jest.mock()` are hoisted to the top of the file, it's not possible to first define a variable and then use it in the factory. An exception is made for variables that start with the word 'mock'. It's up to you to guarantee that they will be initialized on time!
+A limitation with the factory parameter is that, since calls to `jest.mock()` are hoisted to the top of the file, it's not possible to first define a variable and then use it in the factory. An exception is made for variables that start with the word 'mock'. It's up to you to guarantee that they will be initialized on time! For example, the following will throw an out-of-scope error due to the use of 'fake' instead of 'mock' in the variable declaration:
+
+```javascript
+// Note: this will fail
+import SoundPlayer from './sound-player';
+const fakePlaySoundFile = jest.fn();
+jest.mock('./sound-player', () => {
+  return jest.fn().mockImplementation(() => {
+    return {playSoundFile: fakePlaySoundFile};
+  });
+});
+```
 
 ### Replacing the mock using [`mockImplementation()`](MockFunctionAPI.md#mockfnmockimplementationfn) or [`mockImplementationOnce()`](MockFunctionAPI.md#mockfnmockimplementationoncefn)
 
@@ -155,6 +166,8 @@ Calls to jest.mock are hoisted to the top of the code. You can specify a mock la
 
 ```javascript
 import SoundPlayer from './sound-player';
+import SoundPlayerConsumer from './sound-player-consumer';
+
 jest.mock('./sound-player');
 
 describe('When SoundPlayer throws an error', () => {
@@ -177,7 +190,7 @@ describe('When SoundPlayer throws an error', () => {
 
 ## In depth: Understanding mock constructor functions
 
-Building your constructor function mock using `jest.fn().mockImplementation()` makes mocks appear more complicated than they really are. This section shows how you can create your own simple mocks to illustrate how mocking works.
+Building your constructor function mock using `jest.fn().mockImplementation()` makes mocks appear more complicated than they really are. This section shows how you can create your own mocks to illustrate how mocking works.
 
 ### Manual mock that is another ES6 class
 
@@ -198,7 +211,7 @@ export default class SoundPlayer {
 }
 ```
 
-### Simple mock using module factory parameter
+### Mock using module factory parameter
 
 The module factory function passed to `jest.mock(path, moduleFactory)` can be a HOF that returns a function\*. This will allow calling `new` on the mock. Again, this allows you to inject different behavior for testing, but does not provide a way to spy on calls.
 

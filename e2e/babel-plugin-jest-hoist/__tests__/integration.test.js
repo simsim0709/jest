@@ -4,10 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @emails oncall+jsinfra
  */
-
-/* eslint-disable no-useless-concat */
 
 'use strict';
 
@@ -54,6 +51,7 @@ jest.mock('has-flow-types', () => (props: {children: mixed}) => 3, {
 
 // These will not be hoisted
 jest.unmock('../__test_modules__/a').dontMock('../__test_modules__/b');
+// eslint-disable-next-line no-useless-concat
 jest.unmock('../__test_modules__/' + 'c');
 jest.dontMock('../__test_modules__/Mocked');
 

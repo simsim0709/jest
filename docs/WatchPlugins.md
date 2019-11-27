@@ -46,7 +46,7 @@ class MyWatchPlugin {
 
 Below are the hooks available in Jest.
 
-#### `jestHooks.shouldRunTestSuite(testPath)`
+#### `jestHooks.shouldRunTestSuite(testSuiteInfo)`
 
 Returns a boolean (or `Promise<boolean>` for handling asynchronous operations) to specify if a test should be run or not.
 
@@ -55,13 +55,13 @@ For example:
 ```javascript
 class MyWatchPlugin {
   apply(jestHooks) {
-    jestHooks.shouldRunTestSuite(testPath => {
-      return testPath.includes('my-keyword');
+    jestHooks.shouldRunTestSuite(testSuiteInfo => {
+      return testSuiteInfo.testPath.includes('my-keyword');
     });
 
     // or a promise
-    jestHooks.shouldRunTestSuite(testPath => {
-      return Promise.resolve(testPath.includes('my-keyword'));
+    jestHooks.shouldRunTestSuite(testSuiteInfo => {
+      return Promise.resolve(testSuiteInfo.testPath.includes('my-keyword'));
     });
   }
 }
@@ -155,6 +155,7 @@ class MyWatchPlugin {
 For stability and safety reasons, only part of the global configuration keys can be updated with `updateConfigAndRun`. The current white list is as follows:
 
 - [`bail`](configuration.html#bail-number-boolean)
+- [`changedSince`](cli.html#changedsince)
 - [`collectCoverage`](configuration.html#collectcoverage-boolean)
 - [`collectCoverageFrom`](configuration.html#collectcoveragefrom-array)
 - [`collectCoverageOnlyFrom`](configuration.html#collectcoverageonlyfrom-array)

@@ -1,4 +1,9 @@
-/* Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved. */
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 
 /* global document, window, localStorage */
 
@@ -195,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // JS. Let's call it progressive enhancement, sure.
   function makeScreenshotsClickable() {
     document.querySelectorAll('.blockImage img').forEach(img => {
-      console.log('-');
       img.style.cursor = 'pointer';
       img.onclick = () => {
         document.location = img.src;

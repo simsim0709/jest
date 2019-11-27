@@ -73,7 +73,7 @@ test('if utils mocked automatically', () => {
   expect(utils.isAuthorized.mock).toBeTruthy();
 
   // You can provide them with your own implementation
-  // or just pass the expected return value
+  // or pass the expected return value
   utils.authorize.mockReturnValue('mocked_token');
   utils.isAuthorized.mockReturnValue(true);
 
@@ -82,9 +82,9 @@ test('if utils mocked automatically', () => {
 });
 ```
 
-_Note: Core modules, like `fs`, are not mocked by default. They can be mocked explicitly, like `jest.mock('fs')`._
+_Note: Node modules are automatically mocked when you have a manual mock in place (e.g.: `__mocks__/lodash.js`). More info [here](manual-mocks.html#mocking-node-modules)._
 
-_Note: Automocking has a performance cost most noticeable in large projects. See [here](troubleshooting.html#tests-are-slow-when-leveraging-automocking) for details and a workaround._
+_Note: Core modules, like `fs`, are not mocked by default. They can be mocked explicitly, like `jest.mock('fs')`._
 
 ### `browser` [boolean]
 
@@ -140,7 +140,7 @@ Default: `undefined`
 
 The directory where Jest should output its coverage files.
 
-### `coveragePathIgnorePatterns` [array<string>]
+### `coveragePathIgnorePatterns` [array\<string>]
 
 Default: `["/node_modules/"]`
 
@@ -148,7 +148,7 @@ An array of regexp pattern strings that are matched against all file paths befor
 
 These pattern strings match against the full path. Use the `<rootDir>` string token to include the path to your project's root directory to prevent it from accidentally ignoring all of your files in different environments that may have different root directories. Example: `["<rootDir>/build/", "<rootDir>/node_modules/"]`.
 
-### `coverageReporters` [array<string>]
+### `coverageReporters` [array\<string>]
 
 Default: `["json", "lcov", "text", "clover"]`
 
@@ -220,7 +220,13 @@ Jest will fail if:
 - The `./src/api/very-important-module.js` file has less than 100% coverage.
 - Every remaining file combined has less than 50% coverage (`global`).
 
-### `forceCoverageMatch` [array<string>]
+### `displayName` [string]
+
+default: `undefined`
+
+Allows for a label to be printed along side a test while it is running. This becomes more useful in multiproject repositories where there can be many jest configuration files. This visually tells which project a test belongs to.
+
+### `forceCoverageMatch` [array\<string>]
 
 Default: `['']`
 
@@ -286,7 +292,7 @@ Default: `undefined`
 
 This option allows the use of a custom global teardown module which exports an async function that is triggered once after all test suites.
 
-### `moduleFileExtensions` [array<string>]
+### `moduleFileExtensions` [array\<string>]
 
 Default: `["js", "json", "jsx", "node"]`
 
@@ -294,13 +300,13 @@ An array of file extensions your modules use. If you require modules without spe
 
 If you are using TypeScript, you will want to add `"ts"` and/or `"tsx"` to the above default. Where you place these is up to you - we recommend placing the extensions most commonly used in your project on the left.
 
-### `moduleDirectories` [array<string>]
+### `moduleDirectories` [array\<string>]
 
 Default: `["node_modules"]`
 
 An array of directory names to be searched recursively up from the requiring module's location. Setting this option will _override_ the default, if you wish to still search `node_modules` for packages include it along with any other options: `["node_modules", "bower_components"]`
 
-### `moduleNameMapper` [object<string, string>]
+### `moduleNameMapper` [object\<string, string>]
 
 Default: `null`
 
@@ -328,7 +334,7 @@ The order in which the mappings are defined matters. Patterns are checked one by
 
 _Note: If you provide module name without boundaries `^$` it may cause hard to spot errors. E.g. `relay` will replace all modules which contain `relay` as a substring in its name: `relay`, `react-relay` and `graphql-relay` will all be pointed to your stub._
 
-### `modulePathIgnorePatterns` [array<string>]
+### `modulePathIgnorePatterns` [array\<string>]
 
 Default: `[]`
 
@@ -336,7 +342,7 @@ An array of regexp pattern strings that are matched against all module paths bef
 
 These pattern strings match against the full path. Use the `<rootDir>` string token to include the path to your project's root directory to prevent it from accidentally ignoring all of your files in different environments that may have different root directories. Example: `["<rootDir>/build/"]`.
 
-### `modulePaths` [array<string>]
+### `modulePaths` [array\<string>]
 
 Default: `[]`
 
@@ -369,7 +375,7 @@ Default: `undefined`
 
 A preset that is used as a base for Jest's configuration. A preset should point to an npm module that exports a `jest-preset.json` module on its top level.
 
-### `projects` [array<string | ProjectConfig>]
+### `projects` [array\<string | ProjectConfig>]
 
 Default: `undefined`
 
@@ -408,7 +414,7 @@ Default: `false`
 
 Automatically clear mock calls and instances between every test. Equivalent to calling `jest.clearAllMocks()` between each test. This does not remove any mock implementation that may have been provided.
 
-### `reporters` [array<moduleName | [moduleName, options]>]
+### `reporters` [array\<moduleName | [moduleName, options]>]
 
 Default: `undefined`
 
@@ -478,7 +484,7 @@ class MyCustomReporter {
 }
 ```
 
-For the full list of methods and argument types see `Reporter` type in [types/TestRunner.js](https://github.com/facebook/jest/blob/master/types/TestRunner.js)
+For the full list of methods and argument types see `Reporter` interface in [packages/jest-reporters/src/types.ts](https://github.com/facebook/jest/blob/master/packages/jest-reporters/src/types.ts)
 
 ### `resetMocks` [boolean]
 
@@ -519,7 +525,7 @@ Automatically restore mock state between every test. Equivalent to calling `jest
 
 ### `rootDir` [string]
 
-Default: The root of the directory containing your jest's [config file](#) _or_ the `package.json` _or_ the [`pwd`](http://en.wikipedia.org/wiki/Pwd) if no `package.json` is found
+Default: The root of the directory containing your Jest [config file](#) _or_ the `package.json` _or_ the [`pwd`](http://en.wikipedia.org/wiki/Pwd) if no `package.json` is found
 
 The root directory that Jest should scan for tests and modules within. If you put your Jest config inside your `package.json` and want the root directory to be the root of your repo, the value for this config param will default to the directory of the `package.json`.
 
@@ -527,7 +533,7 @@ Oftentimes, you'll want to set this to `'src'` or `'lib'`, corresponding to wher
 
 _Note that using `'<rootDir>'` as a string token in any other path-based config settings will refer back to this value. So, for example, if you want your [`setupFiles`](#setupfiles-array) config entry to point at the `env-setup.js` file at the root of your project, you could set its value to `["<rootDir>/env-setup.js"]`._
 
-### `roots` [array<string>]
+### `roots` [array\<string>]
 
 Default: `["<rootDir>"]`
 
@@ -579,7 +585,7 @@ The path to a module that runs some code to configure or set up the testing fram
 
 For example, Jest ships with several plug-ins to `jasmine` that work by monkey-patching the jasmine API. If you wanted to add even more jasmine plugins to the mix (or if you wanted some custom, project-wide matchers for example), you could do so in this module.
 
-### `snapshotSerializers` [array<string>]
+### `snapshotSerializers` [array\<string>]
 
 Default: `[]`
 
@@ -710,7 +716,7 @@ Default: `{}`
 
 Test environment options that will be passed to the `testEnvironment`. The relevant options depend on the environment. For example you can override options given to [jsdom](https://github.com/tmpvar/jsdom) such as `{userAgent: "Agent/007"}`.
 
-### `testMatch` [array<string>]
+### `testMatch` [array\<string>]
 
 (default: `[ '**/__tests__/**/*.js?(x)', '**/?(*.)(spec|test).js?(x)' ]`)
 
@@ -720,7 +726,7 @@ See the [micromatch](https://github.com/jonschlinkert/micromatch) package for de
 
 See also [`testRegex` [string]](#testregex-string), but note that you cannot specify both options.
 
-### `testPathIgnorePatterns` [array<string>]
+### `testPathIgnorePatterns` [array\<string>]
 
 Default: `["/node_modules/"]`
 
@@ -732,7 +738,7 @@ These pattern strings match against the full path. Use the `<rootDir>` string to
 
 Default: `(/__tests__/.*|(\\.|/)(test|spec))\\.jsx?$`
 
-The pattern Jest uses to detect test files. By default it looks for `.js` and `.jsx` files inside of `__tests__` folders, as well as any files with a suffix of `.test` or `.spec` (e.g. `Component.test.js` or `Component.spec.js`). It will also find files called `test.js` or `spec.js`. See also [`testMatch` [array<string>]](#testmatch-array-string), but note that you cannot specify both options.
+The pattern Jest uses to detect test files. By default it looks for `.js` and `.jsx` files inside of `__tests__` folders, as well as any files with a suffix of `.test` or `.spec` (e.g. `Component.test.js` or `Component.spec.js`). It will also find files called `test.js` or `spec.js`. See also [`testMatch` [array\<string>]](#testmatch-array-string), but note that you cannot specify both options.
 
 The following is a visualization of the default regex:
 
@@ -810,7 +816,7 @@ function testRunner(
 ): Promise<TestResult>;
 ```
 
-An example of such function can be found in our default [jasmine2 test runner package](https://github.com/facebook/jest/blob/master/packages/jest-jasmine2/src/index.js).
+An example of such function can be found in our default [jasmine2 test runner package](https://github.com/facebook/jest/blob/master/packages/jest-jasmine2/src/index.ts).
 
 ### `testURL` [string]
 
@@ -824,7 +830,7 @@ Default: `real`
 
 Setting this value to `fake` allows the use of fake timers for functions such as `setTimeout`. Fake timers are useful when a piece of code sets a long timeout that we don't want to wait for in a test.
 
-### `transform` [object<string, string>]
+### `transform` [object\<string, string>]
 
 Default: `undefined`
 
@@ -836,7 +842,7 @@ _Note: a transformer is only run once per file unless the file has changed. Duri
 
 _Note: if you are using the `babel-jest` transformer and want to use an additional code preprocessor, keep in mind that when "transform" is overwritten in any way the `babel-jest` is not loaded automatically anymore. If you want to use it to compile JavaScript code it has to be explicitly defined. See [babel-jest plugin](https://github.com/facebook/jest/tree/master/packages/babel-jest#setup)_
 
-### `transformIgnorePatterns` [array<string>]
+### `transformIgnorePatterns` [array\<string>]
 
 Default: `["/node_modules/"]`
 
@@ -848,7 +854,7 @@ Example: `["<rootDir>/bower_components/", "<rootDir>/node_modules/"]`.
 
 Sometimes it happens (especially in React Native or TypeScript projects) that 3rd party modules are published as untranspiled. Since all files inside `node_modules` are not transformed by default, Jest will not understand the code in these modules, resulting in syntax errors. To overcome this, you may use `transformIgnorePatterns` to whitelist such modules. You'll find a good example of this use case in [React Native Guide](https://jestjs.io/docs/en/tutorial-react-native.html#transformignorepatterns-customization).
 
-### `unmockedModulePathPatterns` [array<string>]
+### `unmockedModulePathPatterns` [array\<string>]
 
 Default: `[]`
 
@@ -864,7 +870,7 @@ Default: `false`
 
 Indicates whether each individual test should be reported during the run. All errors will also still be shown on the bottom after execution.
 
-### `watchPathIgnorePatterns` [array<string>]
+### `watchPathIgnorePatterns` [array\<string>]
 
 Default: `[]`
 

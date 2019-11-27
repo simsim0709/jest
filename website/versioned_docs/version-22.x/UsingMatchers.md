@@ -118,9 +118,9 @@ test('but there is a "stop" in Christoph', () => {
 });
 ```
 
-## Arrays
+## Arrays and iterables
 
-You can check if an array contains a particular item using `toContain`:
+You can check if an array or iterable contains a particular item using `toContain`:
 
 ```js
 const shoppingList = [
@@ -133,6 +133,7 @@ const shoppingList = [
 
 test('the shopping list has beer on it', () => {
   expect(shoppingList).toContain('beer');
+  expect(new Set(shoppingList)).toContain('beer');
 });
 ```
 
@@ -142,12 +143,12 @@ If you want to test that a particular function throws an error when it's called,
 
 ```js
 function compileAndroidCode() {
-  throw new ConfigError('you are using the wrong JDK');
+  throw new Error('you are using the wrong JDK');
 }
 
 test('compiling android goes as expected', () => {
   expect(compileAndroidCode).toThrow();
-  expect(compileAndroidCode).toThrow(ConfigError);
+  expect(compileAndroidCode).toThrow(Error);
 
   // You can also use the exact error message or a regexp
   expect(compileAndroidCode).toThrow('you are using the wrong JDK');

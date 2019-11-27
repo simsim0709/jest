@@ -10,7 +10,7 @@ A typical snapshot test case for a mobile app renders a UI component, takes a sn
 
 ## Snapshot Testing with Jest
 
-A similar approach can be taken when it comes to testing your React components. Instead of rendering the graphical UI, which would require building the entire app, you can use a test renderer to quickly generate a serializable value for your React tree. Consider this [example test](https://github.com/facebook/jest/blob/master/examples/snapshot/__tests__/link.react.test.js) for a simple [Link component](https://github.com/facebook/jest/blob/master/examples/snapshot/Link.react.js):
+A similar approach can be taken when it comes to testing your React components. Instead of rendering the graphical UI, which would require building the entire app, you can use a test renderer to quickly generate a serializable value for your React tree. Consider this [example test](https://github.com/facebook/jest/blob/master/examples/snapshot/__tests__/link.react.test.js) for a [Link component](https://github.com/facebook/jest/blob/master/examples/snapshot/Link.react.js):
 
 ```javascript
 import React from 'react';
@@ -40,10 +40,9 @@ exports[`renders correctly 1`] = `
 `;
 ```
 
-The snapshot artifact should be committed alongside code changes, and reviewed as part of your code review process. Jest uses [pretty-format](https://github.com/facebook/jest/tree/master/packages/pretty-format) to make snapshots human-readable during code review. On subsequent test runs Jest will simply compare the rendered output with the previous snapshot. If they match, the test will pass. If they don't match, either the test runner found a bug in your code (in this case, it's `<Link>` component) that should be fixed, or the implementation has changed and the snapshot needs to be updated.
+The snapshot artifact should be committed alongside code changes, and reviewed as part of your code review process. Jest uses [pretty-format](https://github.com/facebook/jest/tree/master/packages/pretty-format) to make snapshots human-readable during code review. On subsequent test runs Jest will compare the rendered output with the previous snapshot. If they match, the test will pass. If they don't match, either the test runner found a bug in your code (in this case, it's `<Link>` component) that should be fixed, or the implementation has changed and the snapshot needs to be updated.
 
-> Note: The snapshot is directly scoped to the data you render – in our example it's `<Link />` component with page prop passed to it. This implies that even if any other file has missing props (Say, `App.js`) in the `<Link />` component, it will still pass the test as the test doesn't know the usage of `<Link />` component and it's scoped only to the `Link.react.js`.  
-> Also, Rendering the same component with different props in other snapshot tests will not affect the first one, as the tests don't know about each other.
+> Note: The snapshot is directly scoped to the data you render – in our example it's `<Link />` component with page prop passed to it. This implies that even if any other file has missing props (Say, `App.js`) in the `<Link />` component, it will still pass the test as the test doesn't know the usage of `<Link />` component and it's scoped only to the `Link.react.js`. Also, Rendering the same component with different props in other snapshot tests will not affect the first one, as the tests don't know about each other.
 
 More information on how snapshot testing works and why we built it can be found on the [release blog post](https://jestjs.io/blog/2016/07/27/jest-14.html). We recommend reading [this blog post](http://benmccormick.org/2016/09/19/testing-with-jest-snapshots-first-impressions/) to get a good sense of when you should use snapshot testing. We also recommend watching this [egghead video](https://egghead.io/lessons/javascript-use-jest-s-snapshot-testing-feature?pl=testing-javascript-with-jest-a36c4074) on Snapshot Testing with Jest.
 
@@ -65,7 +64,7 @@ it('renders correctly', () => {
 
 In that case, Jest will print this output:
 
-![](/website/static/img/content/failedSnapshotTest.png)
+![](/img/content/failedSnapshotTest.png)
 
 Since we just updated our component to point to a different address, it's reasonable to expect changes in the snapshot for this component. Our snapshot test case is failing because the snapshot for our updated component no longer matches the snapshot artifact for this test case.
 
@@ -85,17 +84,17 @@ You can try out this functionality by cloning the [snapshot example](https://git
 
 Failed snapshots can also be updated interactively in watch mode:
 
-![](/website/static/img/content/interactiveSnapshot.png)
+![](/img/content/interactiveSnapshot.png)
 
 Once you enter Interactive Snapshot Mode, Jest will step you through the failed snapshots one test at a time and give you the opportunity to review the failed output.
 
 From here you can choose to update that snapshot or skip to the next:
 
-![](/website/static/img/content/interactiveSnapshotUpdate.gif)
+![](/img/content/interactiveSnapshotUpdate.gif)
 
 Once you're finished, Jest will give you a summary before returning back to watch mode:
 
-![](/website/static/img/content/interactiveSnapshotDone.png)
+![](/img/content/interactiveSnapshotDone.png)
 
 ### Inline Snapshots
 
@@ -227,7 +226,7 @@ Ensure that your snapshots are readable by keeping them focused, short, and by u
 
 As mentioned previously, Jest uses [`pretty-format`](https://yarnpkg.com/en/package/pretty-format) to make snapshots human-readable, but you may find it useful to introduce additional tools, like [`eslint-plugin-jest`](https://yarnpkg.com/en/package/eslint-plugin-jest) with its [`no-large-snapshots`](https://github.com/jest-community/eslint-plugin-jest/blob/master/docs/rules/no-large-snapshots.md) option, or [`snapshot-diff`](https://yarnpkg.com/en/package/snapshot-diff) with its component snapshot comparison feature, to promote committing short, focused assertions.
 
-The goal is to make it easy to review snapshots in pull requests, and fight against the habit of simply regenerating snapshots when test suites fail instead of examining the root causes of their failure.
+The goal is to make it easy to review snapshots in pull requests, and fight against the habit of regenerating snapshots when test suites fail instead of examining the root causes of their failure.
 
 ### 2. Tests should be deterministic
 
@@ -269,7 +268,7 @@ exports[`<UserName /> should render Alan Turing`] = `
 `;
 ```
 
-Since the later describes exactly what's expected in the output, it's easy to see when it's wrong:
+Since the later describes exactly what's expected in the output, it's more clear to see when it's wrong:
 
 ```js
 exports[`<UserName /> should render null`] = `
@@ -293,7 +292,7 @@ Yes, all snapshot files should be committed alongside the modules they are cover
 
 ### Does snapshot testing only work with React components?
 
-[React](TutorialReact.md) and [React Native](TutorialReactNative.md) components are a good use case for snapshot testing. However, snapshots can capture any serializable value and should be used anytime the goal is testing whether the output is correct. The Jest repository contains many examples of testing the output of Jest itself, the output of Jest's assertion library as well as log messages from various parts of the Jest codebase. See an example of [snapshotting CLI output](https://github.com/facebook/jest/blob/master/e2e/__tests__/console.test.js) in the Jest repo.
+[React](TutorialReact.md) and [React Native](TutorialReactNative.md) components are a good use case for snapshot testing. However, snapshots can capture any serializable value and should be used anytime the goal is testing whether the output is correct. The Jest repository contains many examples of testing the output of Jest itself, the output of Jest's assertion library as well as log messages from various parts of the Jest codebase. See an example of [snapshotting CLI output](https://github.com/facebook/jest/blob/master/e2e/__tests__/console.test.ts) in the Jest repo.
 
 ### What's the difference between snapshot testing and visual regression testing?
 
@@ -317,4 +316,4 @@ Although it is possible to write snapshot files manually, that is usually not ap
 
 ### Does code coverage work with snapshot testing?
 
-Yes, just like with any other test.
+Yes, as well as with any other test.

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+ * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,7 @@
 
 const fs = require('fs');
 const {execSync} = require('child_process');
-const isbinaryfile = require('isbinaryfile');
+const {isBinaryFileSync} = require('isbinaryfile');
 
 const getFileContents = path => fs.readFileSync(path, {encoding: 'utf-8'});
 const isDirectory = path => fs.lstatSync(path).isDirectory();
@@ -99,8 +99,9 @@ const CUSTOM_IGNORED_PATTERNS = [
   '\\.(example|map)$',
   '^examples/.*',
   '^flow-typed/.*',
-  '^packages/expect/src/jasmineUtils\\.js$',
+  '^packages/expect/src/jasmineUtils\\.ts$',
   '^packages/jest-config/src/vendor/jsonlint\\.js$',
+  '^packages/jest-diff/src/cleanupSemantic\\.ts$',
 ].map(createRegExp);
 
 const IGNORED_PATTERNS = [
@@ -114,12 +115,16 @@ const INCLUDED_PATTERNS = [
   /\.[^/]+$/,
 ];
 
-const COPYRIGHT_HEADER =
-  'Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.';
+const COPYRIGHT_LICENSE = [
+  ' * Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.',
+  ' *',
+  ' * This source code is licensed under the MIT license found in the',
+  ' * LICENSE file in the root directory of this source tree.',
+].join('\n');
 
 function needsCopyrightHeader(file) {
   const contents = getFileContents(file);
-  return contents.trim().length > 0 && !contents.includes(COPYRIGHT_HEADER);
+  return contents.trim().length > 0 && !contents.includes(COPYRIGHT_LICENSE);
 }
 
 function check() {
@@ -132,7 +137,7 @@ function check() {
       INCLUDED_PATTERNS.some(pattern => pattern.test(file)) &&
       !IGNORED_PATTERNS.some(pattern => pattern.test(file)) &&
       !isDirectory(file) &&
-      !isbinaryfile.sync(file) &&
+      !isBinaryFileSync(file) &&
       needsCopyrightHeader(file)
   );
 
