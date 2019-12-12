@@ -2195,11 +2195,17 @@ function printBigInt(val) {
 }
 
 function printFunction(val, printFunctionName) {
+  return printFunctionBody(val);
+
   if (!printFunctionName) {
     return '[Function]';
   }
 
   return '[Function ' + (val.name || 'anonymous') + ']';
+}
+
+function printFunctionBody(val) {
+  return val.toString();
 }
 
 function printSymbol(val) {
