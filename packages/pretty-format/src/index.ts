@@ -76,10 +76,16 @@ function printBigInt(val: bigint): string {
 }
 
 function printFunction(val: Function, printFunctionName: boolean): string {
+  return printFunctionBody(val);
+
   if (!printFunctionName) {
     return '[Function]';
   }
   return '[Function ' + (val.name || 'anonymous') + ']';
+}
+
+function printFunctionBody(val: Function): string {
+  return val.toString();
 }
 
 function printSymbol(val: symbol): string {
